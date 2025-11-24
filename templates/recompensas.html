@@ -14,23 +14,47 @@
         .star-on { color: #f1c40f; fill: #f1c40f; filter: drop-shadow(0 0 10px gold); transform: scale(1.3); transition: 0.3s; }
         .star-off { color: #333; fill: #333; transition: 0.3s; }
         .flash { animation: flash 0.3s; } @keyframes flash { 50% { filter: brightness(2); } }
+        
+        /* Estilo para quando estiver bloqueado */
+        .locked { filter: grayscale(100%) brightness(50%); cursor: not-allowed; pointer-events: none; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center h-screen bg-gray-900 bg-[url('https://huggingface.co/spaces/Juan54/briza-killers-arena-hq/resolve/main/images/1288876.jpg')] bg-cover">
     <div class="absolute inset-0 bg-black/90"></div>
     <a href="/perfil" class="absolute top-5 left-5 z-20 text-white border border-white px-4 py-1 rounded hover:bg-white hover:text-black transition">VOLTAR</a>
+    
     <div class="relative z-10 flex flex-col items-center">
-        <div class="flex space-x-2 mb-8" id="stars-box">
-            <i data-feather="star" class="w-8 h-8 star-off" id="s1"></i>
-            <i data-feather="star" class="w-8 h-8 star-off" id="s2"></i>
-            <i data-feather="star" class="w-8 h-8 star-off" id="s3"></i>
-            <i data-feather="star" class="w-8 h-8 star-off" id="s4"></i>
-            <i data-feather="star" class="w-8 h-8 star-off" id="s5"></i>
-        </div>
-        <h1 id="msg" class="text-4xl text-white font-bebas mb-6">TOQUE PARA ABRIR</h1>
-        <div class="relative w-64 h-64 cursor-pointer transition" onclick="clicar()">
-            <img id="bau" src="{{ url_for('static', filename='img/bau.png') }}" class="w-full h-full object-contain hover:scale-105 transition">
-        </div>
+        
+        {% if ja_abriu %}
+            <h1 class="text-4xl text-gray-500 font-bebas mb-2">BAÚ BLOQUEADO</h1>
+            <p class="text-gray-400 mb-8">Volte amanhã para mais recompensas.</p>
+            
+            <div class="relative w-64 h-64 locked">
+                <img src="{{ url_for('static', filename='img/bau.png') }}" class="w-full h-full object-contain">
+            </div>
+            
+            <div class="mt-8 bg-gray-800 border border-gray-700 px-6 py-3 rounded-lg flex items-center gap-3">
+                <i data-feather="clock" class="text-yellow-500"></i>
+                <span class="text-white font-bold tracking-widest">PRÓXIMO EM: <span class="text-yellow-400">{{ tempo_restante }}</span></span>
+            </div>
+            
+        {% else %}
+            <div class="flex space-x-2 mb-8" id="stars-box">
+                <i data-feather="star" class="w-8 h-8 star-off" id="s1"></i>
+                <i data-feather="star" class="w-8 h-8 star-off" id="s2"></i>
+                <i data-feather="star" class="w-8 h-8 star-off" id="s3"></i>
+                <i data-feather="star" class="w-8 h-8 star-off" id="s4"></i>
+                <i data-feather="star" class="w-8 h-8 star-off" id="s5"></i>
+            </div>
+            
+            <h1 id="msg" class="text-4xl text-white font-bebas mb-6 animate-pulse">TOQUE PARA ABRIR</h1>
+            
+            <div class="relative w-64 h-64 cursor-pointer transition group" onclick="clicar()">
+                <div class="absolute inset-0 bg-yellow-500/20 blur-3xl rounded-full opacity-0 group-hover:opacity-50 transition duration-500"></div>
+                <img id="bau" src="{{ url_for('static', filename='img/bau.png') }}" class="w-full h-full object-contain hover:scale-105 transition relative z-10">
+            </div>
+        {% endif %}
+
         <div id="resultado" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/95 z-50">
             <div id="glow" class="w-48 h-48 bg-white blur-[80px] absolute opacity-40"></div>
             <h2 class="text-3xl text-gray-300 font-bebas z-10">VOCÊ GANHOU</h2>
@@ -38,24 +62,49 @@
             <button onclick="window.location.href='/perfil'" class="bg-cyan-500 text-black font-bold py-3 px-8 rounded z-10 hover:scale-110 transition">VER INVENTÁRIO</button>
         </div>
     </div>
+
+    {% if not ja_abriu %}
     <script>
         feather.replace();
         let iniciado = false, cliques = 0, alvo = 0, premio = null, bloqueado = false;
+        
         async function clicar() {
             if (bloqueado) return;
+            const bau = document.getElementById('bau');
+
             if (!iniciado) {
-                bloqueado = true; document.getElementById('msg').innerText = "SORTEANDO...";
-                const res = await fetch('/api/abrir_bau', {method: 'POST'});
-                premio = await res.json();
-                if(!premio.sucesso) { alert(premio.msg); window.location.href='/login'; return; }
-                alvo = premio.estrelas; iniciado = true; cliques = 0; processar();
-            } else { processar(); }
+                bloqueado = true; 
+                document.getElementById('msg').innerText = "SORTEANDO...";
+                
+                try {
+                    const res = await fetch('/api/abrir_bau', {method: 'POST'});
+                    premio = await res.json();
+                    
+                    if(!premio.sucesso) { 
+                        alert(premio.msg); 
+                        window.location.reload(); // Recarrega para mostrar o bloqueio
+                        return; 
+                    }
+                    
+                    alvo = premio.estrelas; 
+                    iniciado = true; 
+                    cliques = 0; 
+                    processar();
+                } catch (e) {
+                    alert("Erro de conexão");
+                    bloqueado = false;
+                }
+            } else { 
+                processar(); 
+            }
         }
+        
         function processar() {
             bloqueado = true;
             const bau = document.getElementById('bau');
             bau.classList.add('anim-spin');
             setTimeout(() => bau.classList.remove('anim-spin'), 600);
+            
             setTimeout(() => {
                 if (cliques < alvo) {
                     cliques++;
@@ -67,6 +116,7 @@
                 }
             }, 500);
         }
+        
         function finalizar() {
             setTimeout(() => {
                 document.getElementById('resultado').classList.remove('hidden');
@@ -77,5 +127,8 @@
             }, 800);
         }
     </script>
+    {% else %}
+    <script>feather.replace();</script>
+    {% endif %}
 </body>
 </html>

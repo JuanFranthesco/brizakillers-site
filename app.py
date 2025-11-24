@@ -1,75 +1,21 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import sqlite3
 import random
-import os
+from datetime import date # <--- IMPORTANTE: Necessário para pegar o dia de hoje
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = 'chave_mestra_briza_killers'
 DB_NAME = "brizakillers.db"
 
-# --- FUNÇÃO DE AUTO-CORREÇÃO DO BANCO (A SOLUÇÃO) ---
-def init_db():
-    """Verifica se o banco existe e cria se necessário"""
-    with sqlite3.connect(DB_NAME) as conn:
-        cursor = conn.cursor()
-        # Verifica se a tabela 'usuarios' existe
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'")
-        if not cursor.fetchone():
-            print("⚠️ Banco não encontrado! Criando tabelas agora...")
-            
-            # CRIAÇÃO DAS TABELAS
-            cursor.executescript('''
-                CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY AUTOINCREMENT, nome_completo TEXT, email TEXT UNIQUE, senha_hash TEXT, moedas INTEGER DEFAULT 500, tipo_usuario TEXT DEFAULT "torcedor");
-                CREATE TABLE IF NOT EXISTS meus_cupons (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER, codigo TEXT, desconto INTEGER, origem TEXT, data_ganho DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(usuario_id) REFERENCES usuarios(id));
-                CREATE TABLE IF NOT EXISTS produtos (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT, descricao TEXT, preco REAL, imagem_url TEXT, categoria TEXT);
-                CREATE TABLE IF NOT EXISTS partidas (id INTEGER PRIMARY KEY AUTOINCREMENT, titulo TEXT, time_a TEXT, time_b TEXT, data_jogo TEXT, odd_a REAL DEFAULT 2.0, odd_b REAL DEFAULT 2.0, status TEXT DEFAULT "aberta", embed_url TEXT);
-                CREATE TABLE IF NOT EXISTS apostas (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER, partida_id INTEGER, valor_apostado INTEGER, time_escolhido TEXT, status TEXT DEFAULT "pendente", FOREIGN KEY(usuario_id) REFERENCES usuarios(id), FOREIGN KEY(partida_id) REFERENCES partidas(id));
-                CREATE TABLE IF NOT EXISTS jogadores (id INTEGER PRIMARY KEY AUTOINCREMENT, nickname TEXT, nome_real TEXT, funcao TEXT, jogo TEXT, foto_url TEXT, instagram TEXT, stat_mira INTEGER, stat_inteligencia INTEGER, stat_mecanica INTEGER, mouse TEXT, main_char TEXT, bio TEXT, hype INTEGER DEFAULT 0);
-                CREATE TABLE IF NOT EXISTS noticias (id INTEGER PRIMARY KEY AUTOINCREMENT, titulo TEXT, resumo TEXT, conteudo TEXT, imagem_capa TEXT, autor TEXT DEFAULT "Admin", data_postagem DATETIME DEFAULT CURRENT_TIMESTAMP);
-                CREATE TABLE IF NOT EXISTS candidatos (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER, nick_jogo TEXT, rank_atual TEXT, discord TEXT, motivo TEXT, data_inscricao DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY(usuario_id) REFERENCES usuarios(id));
-            ''')
-            
-            # INSERÇÃO DE DADOS (SEEDS)
-            senha_admin = generate_password_hash("123456")
-            cursor.execute("INSERT INTO usuarios (nome_completo, email, senha_hash, moedas, tipo_usuario) VALUES (?, ?, ?, ?, ?)", ('Admin Supremo', 'admin@briza.com', senha_admin, 9999, 'admin'))
-            
-            cursor.execute("DELETE FROM produtos")
-            cursor.execute('''INSERT INTO produtos (nome, descricao, preco, imagem_url, categoria) VALUES 
-                ('JERSEY PRO 2025', 'Uniforme oficial.', 119.90, '/static/img/camisaoficial.png', 'uniformes'),
-                ('BASIC TEE NEON', 'Casual Oversized.', 79.90, '/static/img/informal.png', 'casual'),
-                ('HOODIE KILLERS', 'Moletom tático.', 189.90, '/static/img/moleton.png', 'inverno'),
-                ('BONÉ DAD HAT', 'Boné estruturado.', 59.90, '/static/img/bone.png', 'acessorios'),
-                ('BERMUDA ATHLETIC', 'Short esportivo.', 89.90, '/static/img/shot.jpg', 'casual'),
-                ('CROPPED PRO FEM', 'Baby look jersey.', 79.90, '/static/img/cropt.png', 'uniformes')''')
-
-            cursor.execute("DELETE FROM jogadores")
-            cursor.execute('''INSERT INTO jogadores (nickname, nome_real, funcao, jogo, foto_url, instagram, stat_mira, stat_inteligencia, stat_mecanica, mouse, main_char, bio, hype) VALUES 
-                ('REX', 'Juan', 'Capitão / Rush', 'Clash Royale', 'https://cdn-icons-png.flaticon.com/512/4140/4140048.png', '@juan_rex', 85, 95, 90, 'Logitech G Pro', 'Gigante Real', 'Lider nato e agressivo.', 120),
-                ('PRÍNCIPE', 'Paulo Junior', 'Rei de Soledade', 'Clash Royale', 'https://cdn-icons-png.flaticon.com/512/4140/4140047.png', '@paulo_soledade', 80, 99, 85, 'Razer Viper', 'Príncipe', 'Estrategista defensivo.', 95),
-                ('PESTE BRANCA', 'Twilo', 'Dano Crítico', 'Brawl Stars', 'https://cdn-icons-png.flaticon.com/512/4140/4140037.png', '@twilo_peste', 95, 80, 92, 'HyperX Pulsefire', 'Crow', 'Movimentação imprevisível.', 150),
-                ('VORTEX', 'Ernandes', 'IGL / Estrategista', 'CS:GO', 'https://cdn-icons-png.flaticon.com/512/4140/4140051.png', '@ernandes_vortex', 88, 100, 85, 'Zowie EC2', 'AWP', 'Controle de mapa absoluto.', 80),
-                ('THUNDER', 'Wandson', 'Entry Fragger', 'Valorant', 'https://cdn-icons-png.flaticon.com/512/145/145867.png', '@wandson_thunder', 99, 75, 96, 'Razer Deathadder', 'Jett', 'Reflexos insanos.', 110)''')
-
-            cursor.execute("DELETE FROM partidas")
-            cursor.execute("INSERT INTO partidas (titulo, time_a, time_b, data_jogo, odd_a, odd_b, embed_url) VALUES ('GRANDE FINAL', 'Briza Killers', 'Redes FC', 'AO VIVO', 1.8, 2.2, 'https://www.youtube.com/embed/S7x5Z6w7s8s')")
-            
-            cursor.execute("DELETE FROM noticias")
-            cursor.execute("INSERT INTO noticias (titulo, conteudo, imagem_capa) VALUES ('VITÓRIA NA FINAL', 'Dominamos o servidor e trouxemos o troféu!', 'https://cdn-icons-png.flaticon.com/512/5352/5352037.png')")
-            
-            print("✅ Banco recriado com sucesso!")
-
-# Roda a verificação assim que o app inicia
-init_db()
-
 def get_db_connection():
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
 
-# ==============================================================================
-#                               ROTAS
-# ==============================================================================
+# ... (MANTENHA TODAS AS SUAS ROTAS DE NAVEGAÇÃO IGUAIS AQUI: index, login, cadastro, etc) ...
+# COPIE AS ROTAS DE NAVEGAÇÃO DO SEU ARQUIVO ANTERIOR E COLE AQUI
+# VOU COLOCAR APENAS A API CORRIGIDA ABAIXO PARA VOCÊ SUBSTITUIR
 
 @app.route('/')
 def index():
@@ -100,8 +46,6 @@ def ranking():
         usuario = conn.execute('SELECT * FROM usuarios WHERE id = ?', (session['usuario_id'],)).fetchone()
     conn.close()
     return render_template('ranking.html', jogadores=top_jogadores, usuario=usuario)
-
-# --- LOGIN E CADASTRO ---
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -147,8 +91,6 @@ def perfil():
     c = conn.execute('SELECT * FROM meus_cupons WHERE usuario_id=?',(session['usuario_id'],)).fetchall()
     conn.close()
     return render_template('perfil.html', usuario=u, cupons=c)
-
-# --- ÁREAS DO SITE ---
 
 @app.route('/loja')
 def loja():
@@ -214,9 +156,26 @@ def torneios():
 @app.route('/recompensas')
 def recompensas():
     if 'usuario_id' not in session: return redirect(url_for('login'))
-    return render_template('recompensas.html')
-
-# --- ADMIN ---
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT ultimo_bau FROM usuarios WHERE id = ?', (session['usuario_id'],)).fetchone()
+    conn.close()
+    
+    hoje = str(date.today())
+    ja_abriu = False
+    tempo_restante = ""
+    
+    if user and user['ultimo_bau'] == hoje:
+        ja_abriu = True
+        # Calcula tempo até meia-noite
+        agora = datetime.now()
+        amanha = datetime.combine(date.today() + timedelta(days=1), datetime.min.time())
+        diferenca = amanha - agora
+        horas, resto = divmod(diferenca.seconds, 3600)
+        minutos, segundos = divmod(resto, 60)
+        tempo_restante = f"{horas}h {minutos}m" # Formata para mostrar no botão
+        
+    return render_template('recompensas.html', ja_abriu=ja_abriu, tempo_restante=tempo_restante)
 @app.route('/admin')
 def admin_panel():
     if 'usuario_id' not in session: return redirect(url_for('login'))
@@ -260,21 +219,51 @@ def deletar_item(tipo, id):
     conn.close()
     return redirect(url_for('admin_panel'))
 
-# --- APIS ---
+# ------------------------------------------------------------------------------
+#  AQUI ESTÁ A CORREÇÃO DO BAÚ
+# ------------------------------------------------------------------------------
+
 @app.route('/api/abrir_bau', methods=['POST'])
 def abrir_bau():
     if 'usuario_id' not in session: return jsonify({'sucesso':False}), 401
-    sorte = random.randint(1,100)
+    
     conn = get_db_connection()
+    
+    # 1. VERIFICAR SE JÁ ABRIU HOJE
+    user = conn.execute('SELECT ultimo_bau FROM usuarios WHERE id = ?', (session['usuario_id'],)).fetchone()
+    hoje = str(date.today()) 
+    
+    if user['ultimo_bau'] == hoje:
+        conn.close()
+        return jsonify({'sucesso': False, 'msg': 'Você já abriu o baú hoje! Volte amanhã.'})
+
+    # 2. SE NÃO ABRIU, SORTEIA
+    sorte = random.randint(1,100)
     try:
-        if sorte <= 50: item, rar, est = "50 Moedas", "comum", 1; conn.execute('UPDATE usuarios SET moedas=moedas+50 WHERE id=?',(session['usuario_id'],))
-        elif sorte <= 80: item, rar, est = "Cupom 10%", "raro", 2; conn.execute('INSERT INTO meus_cupons (usuario_id, codigo, desconto, origem) VALUES (?,?,?,?)',(session['usuario_id'], f"RARO{random.randint(100,999)}", 10, 'bau'))
-        elif sorte <= 95: item, rar, est = "300 Moedas", "epico", 3; conn.execute('UPDATE usuarios SET moedas=moedas+300 WHERE id=?',(session['usuario_id'],))
-        else: item, rar, est = "1000 Moedas", "lendario", 5; conn.execute('UPDATE usuarios SET moedas=moedas+1000 WHERE id=?',(session['usuario_id'],))
+        conn.execute('UPDATE usuarios SET ultimo_bau = ? WHERE id = ?', (hoje, session['usuario_id']))
+        
+        if sorte <= 50: 
+            item, rar, est = "50 Moedas", "comum", 1
+            conn.execute('UPDATE usuarios SET moedas=moedas+50 WHERE id=?',(session['usuario_id'],))
+        elif sorte <= 80: 
+            item, rar, est = "Cupom 10%", "raro", 2
+            conn.execute('INSERT INTO meus_cupons (usuario_id, codigo, desconto, origem) VALUES (?,?,?,?)',(session['usuario_id'], f"RARO{random.randint(100,999)}", 10, 'bau'))
+        elif sorte <= 95: 
+            item, rar, est = "300 Moedas", "epico", 3
+            conn.execute('UPDATE usuarios SET moedas=moedas+300 WHERE id=?',(session['usuario_id'],))
+        else: 
+            item, rar, est = "1000 Moedas", "lendario", 5
+            conn.execute('UPDATE usuarios SET moedas=moedas+1000 WHERE id=?',(session['usuario_id'],))
+            
         conn.commit()
         return jsonify({'sucesso':True, 'item':item, 'raridade':rar, 'estrelas':est})
-    except Exception as e: return jsonify({'sucesso':False, 'msg':str(e)})
-    finally: conn.close()
+        
+    except Exception as e: 
+        return jsonify({'sucesso':False, 'msg':str(e)})
+    finally: 
+        conn.close()
+
+# ------------------------------------------------------------------------------
 
 @app.route('/api/apostar', methods=['POST'])
 def apostar():
