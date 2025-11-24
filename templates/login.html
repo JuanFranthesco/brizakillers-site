@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen bg-[url('https://huggingface.co/spaces/Juan54/briza-killers-arena-hq/resolve/main/images/1270409.jpg')] bg-cover">
+    <div class="absolute inset-0 bg-black/70"></div>
+    <div class="relative z-10 bg-black/60 p-10 rounded-xl border border-cyan-400 shadow-[0_0_20px_#00FFFF] max-w-sm w-full backdrop-blur-md">
+        <h1 class="text-5xl text-cyan-400 font-['Bebas_Neue'] text-center mb-6">LOGIN</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="bg-red-500/80 text-white p-2 mb-4 rounded text-center">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        <form action="/login" method="POST" class="space-y-4">
+            <input type="email" name="email" placeholder="Email" required class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-cyan-400 outline-none">
+            <input type="password" name="senha" placeholder="Senha" required class="w-full p-3 bg-gray-800 text-white border border-gray-600 rounded focus:border-cyan-400 outline-none">
+            <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded text-xl font-['Bebas_Neue'] transition">ENTRAR</button>
+        </form>
+        <div class="mt-4 text-center">
+            <a href="/" class="text-gray-400 hover:text-white text-sm">Voltar ao Site</a>
+        </div>
+    </div>
+</body>
+</html>

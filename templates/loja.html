@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loja Oficial - Briza Killers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #050505; color: white; }
+        .font-bebas { font-family: 'Bebas Neue', cursive; }
+        
+        /* Efeitos do Card */
+        .prod-card:hover .prod-img { transform: scale(1.05); opacity: 0.9; }
+        .prod-img { transition: transform 0.5s ease; }
+        
+        /* Botão "Ver Detalhes" que aparece no hover */
+        .overlay-btn { 
+            opacity: 0; 
+            transform: translateY(20px); 
+            transition: all 0.3s ease; 
+        }
+        .prod-card:hover .overlay-btn { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="border-b border-white/10 bg-black/80 backdrop-blur sticky top-0 z-50">
+        <div class="container mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="/" class="text-3xl font-bebas tracking-widest text-white">BRIZA<span class="text-cyan-400">.GG</span></a>
+            
+            <div class="flex items-center gap-6">
+                {% if usuario %}
+                <div class="hidden md:flex items-center gap-2 text-sm font-medium text-gray-300">
+                    <span>{{ usuario.moedas }}</span>
+                    <i data-feather="dollar-sign" class="w-3 h-3 text-cyan-400"></i>
+                </div>
+                {% endif %}
+                
+                <a href="/carrinho" class="relative cursor-pointer group text-gray-300 hover:text-white transition">
+                    <i data-feather="shopping-cart"></i>
+                    {% if session.get('carrinho') %}
+                    <span class="absolute -top-2 -right-2 bg-cyan-500 text-black text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                        {{ session['carrinho']|length }}
+                    </span>
+                    {% endif %}
+                </a>
+                
+                <a href="/perfil" class="hover:text-cyan-400 text-gray-300 transition">
+                    <i data-feather="user"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="relative h-[40vh] w-full overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://huggingface.co/spaces/Juan54/briza-killers-arena-hq/resolve/main/images/1270409.jpg')] bg-cover bg-center opacity-40 grayscale"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent"></div>
+        <div class="container mx-auto px-6 h-full flex flex-col justify-center relative z-10">
+            <span class="text-cyan-400 tracking-[0.5em] text-xs font-bold mb-4 uppercase">Coleção 2025</span>
+            <h1 class="text-6xl md:text-7xl font-bebas text-white">NÓS SOMOS A <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">TEMPESTADE</span></h1>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-6 py-20">
+        <div class="flex justify-between items-end mb-12">
+            <h2 class="text-2xl font-bebas tracking-wide border-l-4 border-cyan-400 pl-4">LANÇAMENTOS</h2>
+            <span class="text-xs font-bold text-gray-500 tracking-widest">VISUALIZANDO {{ produtos|length }} ITENS</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            {% for prod in produtos %}
+            <a href="/produto/{{ prod.id }}" class="prod-card group cursor-pointer block">
+                
+                <div class="relative aspect-[3/4] bg-[#111] mb-4 overflow-hidden border border-white/5 group-hover:border-cyan-500/30 transition rounded-sm">
+                    <img src="{{ prod.imagem_url }}" 
+                         class="prod-img w-full h-full object-cover" 
+                         alt="{{ prod.nome }}"
+                         onerror="this.src='https://via.placeholder.com/400x500/111/333?text=SEM+IMAGEM'">
+                    
+                    <div class="absolute bottom-0 left-0 w-full p-4 overlay-btn">
+                        <button class="w-full bg-white text-black font-bold py-3 uppercase text-xs tracking-widest hover:bg-cyan-400 transition shadow-lg">
+                            Ver Detalhes
+                        </button>
+                    </div>
+
+                    {% if 'PRO' in prod.nome %}
+                    <span class="absolute top-3 left-3 bg-cyan-500 text-black text-[10px] font-bold px-2 py-1 uppercase tracking-wider">Novo</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-white leading-none mb-1 group-hover:text-cyan-400 transition">{{ prod.nome }}</h3>
+                    <p class="text-gray-500 text-xs uppercase tracking-widest mb-2">{{ prod.categoria }}</p>
+                    <p class="text-sm font-medium text-gray-300">R$ {{ "%.2f"|format(prod.preco) }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer class="bg-black border-t border-white/10 py-12 mt-auto">
+        <div class="container mx-auto px-6 text-center text-gray-600 text-sm">
+            <p>&copy; 2025 Briza Killers. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

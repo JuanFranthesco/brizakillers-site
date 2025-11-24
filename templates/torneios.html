@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Arena Live - Briza Killers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; background-color: #050505; color: white; overflow-x: hidden; }
+        .font-bebas { font-family: 'Bebas Neue', cursive; }
+        
+        /* Scrollbar Invisível para o Chat */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Efeito de Piscar "AO VIVO" */
+        .live-dot { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="border-b border-white/10 bg-[#0a0a0a] sticky top-0 z-50 h-16 flex items-center px-6 justify-between">
+        <a href="/" class="text-2xl font-bebas text-white">BRIZA<span class="text-cyan-400">.TV</span></a>
+        
+        <div class="flex items-center gap-4">
+            <div class="bg-yellow-500/10 px-3 py-1 rounded border border-yellow-500/30 flex items-center gap-2">
+                <span id="saldo-topo" class="text-yellow-400 font-bold">{{ saldo }}</span>
+                <i data-feather="dollar-sign" class="w-3 h-3 text-yellow-400"></i>
+            </div>
+            <a href="/perfil" class="text-gray-400 hover:text-white text-sm">SAIR</a>
+        </div>
+    </header>
+
+    <div class="flex flex-col lg:flex-row flex-1 h-[calc(100vh-64px)]">
+        
+        <div class="lg:w-3/4 bg-black relative flex flex-col">
+            {% if destaque %}
+            <div class="flex-1 relative bg-black flex items-center justify-center">
+                <iframe class="w-full h-full absolute inset-0" 
+                        src="{{ destaque.embed_url if destaque.embed_url else 'https://www.youtube.com/embed/S7x5Z6w7s8s?autoplay=1&mute=1' }}" 
+                        title="Live Stream" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                </iframe>
+                
+                <div class="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded font-bold text-xs flex items-center gap-2 z-10">
+                    <span class="w-2 h-2 bg-white rounded-full live-dot"></span> AO VIVO
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-white/10 bg-[#0f0f0f]">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h1 class="text-3xl font-bebas text-white mb-1">{{ destaque.titulo }}</h1>
+                        <p class="text-cyan-400 text-sm font-bold tracking-widest flex items-center gap-2">
+                            <i data-feather="users" class="w-4 h-4"></i> 12.4K ASSISTINDO
+                        </p>
+                    </div>
+                    <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" class="text-gray-500 hover:text-white text-sm underline lg:hidden">Ver outros jogos</button>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex-1 flex items-center justify-center text-gray-500">
+                <p>Nenhuma transmissão ativa no momento.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="lg:w-1/4 bg-[#111] border-l border-white/10 flex flex-col">
+            
+            <div class="p-6 border-b border-white/10 bg-[#151515]">
+                <h2 class="text-xl font-bebas text-white mb-4 flex items-center gap-2">
+                    <i data-feather="crosshair" class="text-yellow-400"></i> FAÇA SUA APOSTA
+                </h2>
+                
+                {% if destaque %}
+                <div class="flex justify-between items-center bg-black/40 rounded-lg p-3 mb-4 border border-white/5">
+                    <div class="text-center">
+                        <span class="block font-bold text-blue-400">{{ destaque.time_a }}</span>
+                        <span class="text-xs text-gray-500">Time A</span>
+                    </div>
+                    <span class="font-bebas text-xl text-gray-600">VS</span>
+                    <div class="text-center">
+                        <span class="block font-bold text-red-400">{{ destaque.time_b }}</span>
+                        <span class="text-xs text-gray-500">Time B</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="apostar({{ destaque.id }}, 'time_a', '{{ destaque.time_a }}', {{ destaque.odd_a }})" class="bg-blue-600/20 border border-blue-600/50 hover:bg-blue-600 text-white p-3 rounded transition group">
+                        <span class="block text-xs text-blue-300 group-hover:text-white mb-1">VENCE</span>
+                        <span class="block font-bold text-xl">{{ destaque.odd_a }}x</span>
+                    </button>
+                    <button onclick="apostar({{ destaque.id }}, 'time_b', '{{ destaque.time_b }}', {{ destaque.odd_b }})" class="bg-red-600/20 border border-red-600/50 hover:bg-red-600 text-white p-3 rounded transition group">
+                        <span class="block text-xs text-red-300 group-hover:text-white mb-1">VENCE</span>
+                        <span class="block font-bold text-xl">{{ destaque.odd_b }}x</span>
+                    </button>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">Aguardando próxima partida...</p>
+                {% endif %}
+            </div>
+
+            <div class="flex-1 flex flex-col overflow-hidden bg-[#0a0a0a]">
+                <div class="p-3 border-b border-white/5 text-xs font-bold text-gray-400 uppercase tracking-widest">Chat da Torcida</div>
+                
+                <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar">
+                    <div class="text-sm"><span class="font-bold text-cyan-400">Vortex:</span> Vamooo Briza!</div>
+                    <div class="text-sm"><span class="font-bold text-purple-400">Ana_Valk:</span> O deck dele tá counterado</div>
+                </div>
+
+                <div class="p-3 bg-[#111] border-t border-white/10">
+                    <div class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="Envie uma mensagem..." class="flex-1 bg-black border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-cyan-400 outline-none">
+                        <button onclick="enviarChat()" class="text-cyan-400 hover:text-white"><i data-feather="send" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if partidas %}
+    <section class="bg-[#050505] py-12 border-t border-white/10">
+        <div class="container mx-auto px-6">
+            <h3 class="text-2xl font-bebas text-gray-400 mb-6">PRÓXIMOS JOGOS</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                {% for jogo in partidas %}
+                <div class="bg-[#111] p-4 rounded-xl border border-white/5 hover:border-cyan-500/50 transition">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-400">{{ jogo.data_jogo }}</span>
+                        <span class="text-cyan-400 font-bold">Em breve</span>
+                    </div>
+                    <div class="flex justify-between items-center font-bold text-white mb-4">
+                        <span>{{ jogo.time_a }}</span>
+                        <span class="text-gray-600 text-xs">VS</span>
+                        <span>{{ jogo.time_b }}</span>
+                    </div>
+                    <button onclick="apostar({{ jogo.id }}, 'time_a', '{{ jogo.time_a }}', {{ jogo.odd_a }})" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded text-xs font-bold transition">
+                        VER ODDS E APOSTAR
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <script>
+        feather.replace();
+
+        // Sistema de Chat Fake (Para parecer que o site está bombando)
+        const chatBox = document.getElementById('chat-box');
+        const nomes = ['Player1', 'DarkLord', 'ClashKing', 'Jujuba', 'MestreBR', 'SemDedo'];
+        const msgs = ['Joga muito!', 'GG', 'Nossa, que predict!', 'Apostei tudo no Briza', 'Vai perder kkk', 'Opa'];
+        const cores = ['text-cyan-400', 'text-purple-400', 'text-yellow-400', 'text-green-400'];
+
+        function addMessage(nick, msg, cor) {
+            const div = document.createElement('div');
+            div.className = 'text-sm animate-fade-in';
+            div.innerHTML = `<span class="font-bold ${cor}">${nick}:</span> <span class="text-gray-300">${msg}</span>`;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto scroll
+        }
+
+        // Gera mensagem aleatória a cada 3 segundos
+        setInterval(() => {
+            const nick = nomes[Math.floor(Math.random() * nomes.length)];
+            const msg = msgs[Math.floor(Math.random() * msgs.length)];
+            const cor = cores[Math.floor(Math.random() * cores.length)];
+            addMessage(nick, msg, cor);
+        }, 3500);
+
+        function enviarChat() {
+            const input = document.getElementById('chat-input');
+            if(input.value.trim()) {
+                addMessage('Você', input.value, 'text-white');
+                input.value = '';
+            }
+        }
+
+        // Sistema de Aposta
+        async function apostar(id, timeKey, nome, odd) {
+            const valor = prompt(`Apostar em ${nome} (${odd}x).\nSeu saldo atual: {{ saldo }}\nValor da aposta:`);
+            if (valor && parseInt(valor) > 0) {
+                try {
+                    const res = await fetch('/api/apostar', {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({partida_id: id, time: timeKey, valor: valor})
+                    });
+                    const data = await res.json();
+                    if (data.sucesso) { 
+                        alert(`✅ Aposta confirmada!\nNovo saldo: ${data.novo_saldo}`); 
+                        document.getElementById('saldo-topo').innerText = data.novo_saldo; 
+                    } else { alert("❌ " + data.msg); }
+                } catch (e) { alert("Erro de conexão"); }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line-up Oficial - Briza Killers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; background-color: #050505; color: white; }
+        .font-bebas { font-family: 'Bebas Neue', cursive; }
+        
+        /* Efeito 3D Tilt nos Cards */
+        .player-card { 
+            transition: transform 0.1s; 
+            transform-style: preserve-3d;
+        }
+        .player-card:hover { 
+            border-color: #00FFFF; 
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2); 
+        }
+
+        /* Fundo Gradeado */
+        .bg-grid { 
+            background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), 
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); 
+            background-size: 30px 30px; 
+        }
+
+        /* Animação Modal */
+        .modal-enter { animation: modalPop 0.3s ease-out forwards; }
+        @keyframes modalPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-grid min-h-screen flex flex-col">
+
+    <header class="border-b border-white/10 bg-black/80 backdrop-blur sticky top-0 z-40">
+        <div class="container mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="/" class="text-3xl font-bebas tracking-widest text-white">BRIZA<span class="text-cyan-400">.GG</span></a>
+            <nav class="hidden md:flex gap-8 text-sm font-bold tracking-widest">
+                <a href="/" class="text-gray-400 hover:text-white transition">INÍCIO</a>
+                <a href="/loja" class="text-gray-400 hover:text-white transition">LOJA</a>
+                <a href="/torneios" class="text-gray-400 hover:text-white transition">APOSTAS</a>
+                <span class="text-cyan-400 border-b border-cyan-400 pb-1">EQUIPE</span>
+            </nav>
+            <div class="flex items-center gap-6">
+                {% if usuario %}
+                <a href="/perfil" class="flex items-center gap-2 hover:text-cyan-400 transition">
+                    <span class="text-sm font-bold">{{ usuario.nome_completo.split()[0] }}</span><i data-feather="user" class="w-4 h-4"></i>
+                </a>
+                {% else %}
+                <a href="/login" class="text-sm font-bold bg-cyan-500 text-black px-4 py-2 rounded hover:bg-cyan-400 transition">ENTRAR</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="relative py-16 text-center">
+        <span class="text-cyan-400 tracking-[0.5em] text-xs font-bold uppercase mb-4 block animate-pulse">Temporada 2025</span>
+        <h1 class="text-6xl md:text-8xl font-bebas text-white mb-2">TIME <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">TITULAR</span></h1>
+        <p class="text-gray-400">Clique no jogador para ver a análise de performance.</p>
+    </div>
+
+    <main class="container mx-auto px-6 pb-24">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 perspective-1000">
+            
+            {% for player in jogadores %}
+            <div class="player-card bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden relative cursor-pointer group"
+                 onclick="abrirModal({
+                     nick: '{{ player.nickname }}',
+                     nome: '{{ player.nome_real }}',
+                     role: '{{ player.funcao }}',
+                     foto: '{{ player.foto_url }}',
+                     bio: '{{ player.bio }}',
+                     insta: '{{ player.instagram }}',
+                     stats: [{{ player.stat_mira }}, {{ player.stat_inteligencia }}, {{ player.stat_mecanica }}],
+                     setup: '{{ player.mouse }}',
+                     main: '{{ player.main_char }}'
+                 }, this)">
+                
+                <div class="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-cyan-900/20 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+
+                <div class="p-6 flex flex-col items-center relative z-10">
+                    <div class="w-28 h-28 rounded-full p-1 bg-gradient-to-br from-cyan-500 to-purple-600 mb-4 group-hover:scale-110 transition duration-500 shadow-lg shadow-cyan-500/20">
+                        <img src="{{ player.foto_url }}" class="w-full h-full rounded-full object-cover bg-gray-900">
+                    </div>
+                    
+                    <h2 class="text-3xl font-bebas text-white mb-1 group-hover:text-cyan-400 transition">{{ player.nickname }}</h2>
+                    <p class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-6">{{ player.nome_real }}</p>
+                    
+                    <div class="w-full space-y-2 mb-6 opacity-70 group-hover:opacity-100 transition">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] w-8 text-right text-gray-400">MIRA</span>
+                            <div class="h-1 flex-1 bg-gray-800 rounded overflow-hidden"><div class="h-full bg-cyan-400" style="width: {{ player.stat_mira }}%"></div></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] w-8 text-right text-gray-400">INT</span>
+                            <div class="h-1 flex-1 bg-gray-800 rounded overflow-hidden"><div class="h-full bg-purple-400" style="width: {{ player.stat_inteligencia }}%"></div></div>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-gray-400 uppercase tracking-widest border-t border-white/10 pt-4 w-full text-center group-hover:text-white transition">
+                        Ver Análise Completa <i data-feather="plus" class="w-3 h-3 inline ml-1"></i>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </main>
+
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" onclick="fecharModal()"></div>
+        
+        <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+            <div class="bg-[#0f0f0f] border border-cyan-500/30 w-full max-w-4xl rounded-2xl shadow-2xl shadow-cyan-500/10 pointer-events-auto flex flex-col md:flex-row overflow-hidden modal-enter">
+                
+                <div class="w-full md:w-1/3 bg-[#0a0a0a] p-8 flex flex-col items-center border-r border-white/5 text-center">
+                    <div class="w-40 h-40 rounded-full p-1 bg-gradient-to-br from-cyan-500 to-purple-600 mb-6">
+                        <img id="m-foto" src="" class="w-full h-full rounded-full object-cover bg-gray-900">
+                    </div>
+                    <h2 id="m-nick" class="text-5xl font-bebas text-white mb-1">NICKNAME</h2>
+                    <p id="m-role" class="text-cyan-400 font-bold uppercase tracking-widest mb-6">FUNÇÃO</p>
+                    
+                    <div class="w-full bg-[#151515] p-4 rounded-lg mb-4 border border-white/5">
+                        <p class="text-xs text-gray-500 uppercase mb-1">Equipamento</p>
+                        <p id="m-setup" class="text-white font-bold flex items-center justify-center gap-2"><i data-feather="mouse" class="w-4"></i> ...</p>
+                    </div>
+                    <div class="w-full bg-[#151515] p-4 rounded-lg border border-white/5">
+                        <p class="text-xs text-gray-500 uppercase mb-1">Personagem Principal</p>
+                        <p id="m-main" class="text-yellow-400 font-bold flex items-center justify-center gap-2"><i data-feather="star" class="w-4"></i> ...</p>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-2/3 p-8 relative">
+                    <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i data-feather="x" class="w-8 h-8"></i></button>
+                    
+                    <h3 class="text-2xl font-bebas text-white mb-4">PERFIL DO ATLETA</h3>
+                    <p id="m-bio" class="text-gray-400 leading-relaxed mb-8 border-l-2 border-purple-500 pl-4 italic">
+                        Descrição do jogador...
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="h-64 relative">
+                            <canvas id="statsChart"></canvas>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                <span class="text-gray-400">MIRA / PRECISÃO</span>
+                                <span id="val-mira" class="text-cyan-400 font-bold text-xl">0</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                <span class="text-gray-400">INTELIGÊNCIA</span>
+                                <span id="val-iq" class="text-purple-400 font-bold text-xl">0</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                                <span class="text-gray-400">MECÂNICA</span>
+                                <span id="val-mec" class="text-pink-400 font-bold text-xl">0</span>
+                            </div>
+                            <a id="m-insta" href="#" target="_blank" class="inline-block mt-4 text-sm text-gray-500 hover:text-white transition">
+                                <i data-feather="instagram" class="w-4 h-4 inline"></i> Ver Instagram
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+        let chartInstance = null;
+
+        // Efeito 3D Tilt
+        document.querySelectorAll('.player-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / 10) * -1;
+                const rotateY = (x - centerX) / 10;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        function abrirModal(data, element) {
+            document.getElementById('m-nick').innerText = data.nick;
+            document.getElementById('m-role').innerText = data.role;
+            document.getElementById('m-foto').src = data.foto;
+            document.getElementById('m-bio').innerText = '"' + data.bio + '"';
+            document.getElementById('m-setup').innerHTML = `<i data-feather="mouse" class="w-4"></i> ${data.setup}`;
+            document.getElementById('m-main').innerHTML = `<i data-feather="star" class="w-4"></i> ${data.main}`;
+            document.getElementById('m-insta').href = `https://instagram.com/${data.insta.replace('@','')}`;
+            
+            document.getElementById('val-mira').innerText = data.stats[0];
+            document.getElementById('val-iq').innerText = data.stats[1];
+            document.getElementById('val-mec').innerText = data.stats[2];
+
+            feather.replace();
+
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            
+            if(chartInstance) chartInstance.destroy();
+
+            // Labels Traduzidas no Gráfico
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['MIRA', 'INTELIGÊNCIA', 'MECÂNICA', 'COMUNICAÇÃO', 'AGRESSIVIDADE'],
+                    datasets: [{
+                        label: 'Atributos',
+                        data: [
+                            data.stats[0], 
+                            data.stats[1], 
+                            data.stats[2], 
+                            Math.floor(Math.random() * (95 - 80) + 80), 
+                            Math.floor(Math.random() * (99 - 85) + 85)
+                        ],
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: '#00FFFF',
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#00FFFF',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#fff', font: { size: 10, family: 'Rajdhani' } },
+                            suggestedMin: 0, suggestedMax: 100, ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            document.getElementById('profile-modal').classList.remove('hidden');
+        }
+
+        function fecharModal() {
+            document.getElementById('profile-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

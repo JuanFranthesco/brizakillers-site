@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Briza Killers - Início</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Rajdhani', sans-serif; background-color: #050505; color: white; }
+        .font-bebas { font-family: 'Bebas Neue', cursive; }
+        
+        /* Efeitos de Hover nos Cards */
+        .nav-card { transition: all 0.3s ease; }
+        .nav-card:hover { 
+            transform: translateY(-5px); 
+            border-color: #00FFFF; 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); 
+        }
+        
+        /* Botão Neon */
+        .btn-neon {
+            background: transparent; border: 1px solid #00FFFF; color: #00FFFF;
+            box-shadow: 0 0 5px #00FFFF, inset 0 0 5px #00FFFF;
+            text-shadow: 0 0 5px #00FFFF;
+            transition: 0.3s;
+        }
+        .btn-neon:hover { 
+            background: #00FFFF; color: black; 
+            box-shadow: 0 0 20px #00FFFF, inset 0 0 10px #00FFFF; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur border-b border-white/10">
+        <div class="container mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="/" class="text-3xl font-bebas tracking-widest text-white">BRIZA<span class="text-cyan-400">.GG</span></a>
+            
+            <nav class="hidden md:flex gap-8 text-sm font-bold tracking-widest">
+                <a href="/" class="text-cyan-400 border-b border-cyan-400 pb-1">INÍCIO</a>
+                <a href="/loja" class="text-gray-400 hover:text-white transition">LOJA</a>
+                <a href="/torneios" class="text-gray-400 hover:text-white transition">APOSTAS</a>
+                <a href="/equipes" class="text-gray-400 hover:text-white transition">EQUIPE</a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+                {% if usuario %}
+                    <div class="hidden md:flex flex-col items-end leading-tight">
+                        <span class="text-xs text-gray-400">Olá,</span>
+                        <span class="font-bold text-cyan-400">{{ usuario.nome_completo.split()[0] }}</span>
+                    </div>
+                    <a href="/perfil" class="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-black font-bold hover:scale-110 transition overflow-hidden">
+                        {{ usuario.nome_completo[0] }}
+                    </a>
+                {% else %}
+                    <a href="/login" class="text-gray-300 hover:text-white font-bold text-sm mr-2">ENTRAR</a>
+                    <a href="/cadastro" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded font-bold text-sm transition">
+                        CRIAR CONTA
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <div class="relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://huggingface.co/spaces/Juan54/briza-killers-arena-hq/resolve/main/images/1270409.jpg')] bg-cover bg-center"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#050505]"></div>
+
+        <div class="relative z-10 text-center px-4 mt-16">
+            <div class="inline-block border border-cyan-500/50 bg-cyan-500/10 px-4 py-1 rounded-full text-cyan-400 text-xs font-bold tracking-[0.2em] mb-4 animate-pulse">
+                TEMPORADA 2025
+            </div>
+            <h1 class="text-7xl md:text-9xl font-bebas text-white mb-2 drop-shadow-[0_0_15px_rgba(0,255,255,0.5)]">
+                SOMOS A <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">LENDA</span>
+            </h1>
+            <p class="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-light">
+                Junte-se à maior organização de eSports do IFRN. Compita, aposte e conquiste recompensas exclusivas.
+            </p>
+            
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                {% if not usuario %}
+                    <a href="/cadastro" class="btn-neon px-10 py-4 text-xl font-bebas tracking-wide rounded">
+                        ALISTAR-SE AGORA
+                    </a>
+                {% else %}
+                    <a href="/recompensas" class="btn-neon px-10 py-4 text-xl font-bebas tracking-wide rounded">
+                        ABRIR BAÚ DIÁRIO
+                    </a>
+                {% endif %}
+                <a href="/loja" class="bg-white/10 border border-white/20 hover:bg-white hover:text-black text-white px-10 py-4 text-xl font-bebas tracking-wide rounded transition backdrop-blur-sm">
+                    VISITAR LOJA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <section class="container mx-auto px-6 -mt-20 relative z-20 pb-20">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <a href="/loja" class="nav-card bg-[#111] border border-white/10 p-8 rounded-2xl flex flex-col items-start group">
+                <div class="bg-purple-500/20 p-3 rounded-lg mb-4 text-purple-400 group-hover:text-white group-hover:bg-purple-500 transition">
+                    <i data-feather="shopping-bag" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-3xl font-bebas text-white mb-2">LOJA OFICIAL</h3>
+                <p class="text-gray-400 text-sm mb-4">Garanta o uniforme oficial e acessórios exclusivos.</p>
+                <span class="text-purple-400 text-sm font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    COMPRAR <i data-feather="arrow-right" class="w-4 h-4"></i>
+                </span>
+            </a>
+
+            <a href="/torneios" class="nav-card bg-[#111] border border-white/10 p-8 rounded-2xl flex flex-col items-start group">
+                <div class="bg-yellow-500/20 p-3 rounded-lg mb-4 text-yellow-400 group-hover:text-black group-hover:bg-yellow-500 transition">
+                    <i data-feather="crosshair" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-3xl font-bebas text-white mb-2">BOLÃO</h3>
+                <p class="text-gray-400 text-sm mb-4">Use suas moedas para apostar nas partidas do interclasse.</p>
+                <span class="text-yellow-400 text-sm font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    JOGAR <i data-feather="arrow-right" class="w-4 h-4"></i>
+                </span>
+            </a>
+
+            <a href="/equipes" class="nav-card bg-[#111] border border-white/10 p-8 rounded-2xl flex flex-col items-start group">
+                <div class="bg-cyan-500/20 p-3 rounded-lg mb-4 text-cyan-400 group-hover:text-black group-hover:bg-cyan-500 transition">
+                    <i data-feather="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-3xl font-bebas text-white mb-2">LINE-UP</h3>
+                <p class="text-gray-400 text-sm mb-4">Conheça os pro-players e suas estatísticas.</p>
+                <span class="text-cyan-400 text-sm font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    CONHECER <i data-feather="arrow-right" class="w-4 h-4"></i>
+                </span>
+            </a>
+
+        </div>
+    </section>
+
+    <section class="bg-[#0a0a0a] py-20 border-t border-white/5">
+        <div class="container mx-auto px-6">
+            <div class="flex justify-between items-end mb-10">
+                <h2 class="text-4xl font-bebas text-white">ÚLTIMAS <span class="text-cyan-400">NOTÍCIAS</span></h2>
+                <a href="/noticias" class="text-gray-400 hover:text-white text-sm font-bold tracking-widest border border-gray-700 px-4 py-2 rounded hover:bg-gray-800 transition">
+                    VER FEED COMPLETO &rarr;
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {% for noticia in noticias %}
+                <a href="/noticias" class="group cursor-pointer block">
+                    <div class="overflow-hidden rounded-xl mb-4 h-48 relative">
+                        <img src="{{ noticia.imagem_capa }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://via.placeholder.com/400x300/111/333?text=SEM+IMAGEM'">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition"></div>
+                    </div>
+                    <p class="text-cyan-400 text-xs font-bold uppercase mb-2">{{ noticia.data_postagem }}</p>
+                    <h3 class="text-xl font-bold leading-tight text-white group-hover:text-cyan-400 transition">{{ noticia.titulo }}</h3>
+                </a>
+                {% else %}
+                <div class="col-span-3 text-center py-10 border border-dashed border-gray-800 rounded">
+                    <p class="text-gray-500">Nenhuma notícia publicada ainda.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-black border-t border-white/10 py-12 mt-auto">
+        <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="text-center md:text-left">
+                <h2 class="text-2xl font-bebas text-white mb-2">BRIZA KILLERS</h2>
+                <p class="text-gray-500 text-sm">© 2025 Todos os direitos reservados.</p>
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-gray-400 hover:text-purple-500 transition"><i data-feather="instagram"></i></a>
+                <a href="#" class="text-gray-400 hover:text-blue-500 transition"><i data-feather="twitter"></i></a>
+                <a href="#" class="text-gray-400 hover:text-red-500 transition"><i data-feather="youtube"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
