@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 import sqlite3
 import random
-from datetime import date # <--- IMPORTANTE: Necessário para pegar o dia de hoje
+from datetime import date, datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
